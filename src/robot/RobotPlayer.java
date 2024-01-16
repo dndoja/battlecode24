@@ -105,7 +105,7 @@ public strictfp class RobotPlayer {
                 }
             } catch (GameActionException e) {
                 // System.out.println("GameActionException");
-                // e.printStackTrace();
+                e.printStackTrace();
             } catch (Exception e) {
                 System.out.println("Exception");
                 e.printStackTrace();
@@ -127,11 +127,10 @@ public strictfp class RobotPlayer {
 
             rc.spawn(spawnLoc);
 
-            if (isPrepGamePhase()){
+            if (state.getTurnsSinceSquadFormation() == -1){
                 final int spawnZoneNumber = spawnZones[i];
                 final int spawnZoneSquadCountChannel = SquadFormation.getSpawnZoneSquadCountChannel(spawnZoneNumber);
-                System.out.println("Spawn channel " + spawnZoneSquadCountChannel);
-
+                
                 int squadsCount = rc.readSharedArray(spawnZoneSquadCountChannel);
                 int squadNumber = spawnZoneNumber + (3 * squadsCount);
                 int squadHeadcountChannel = SquadFormation.getSquadHeadcountChannel(squadNumber);
@@ -145,6 +144,8 @@ public strictfp class RobotPlayer {
                 }
                 
                 state.setInitialSpawnZone(spawnZoneNumber);
+
+                System.out.println(squadNumber);
                 state.setSquadNumber(squadNumber);
                 state.setRoleFromSpawnOrder(headcount);
 
@@ -158,6 +159,7 @@ public strictfp class RobotPlayer {
 
     private static void discoverSquadMembers(RobotController rc) throws GameActionException {
         final int squadAnnouncementsChannelStart = SquadFormation.getSquadHeadcountChannel(state.getSquadNumber()) + 1;
+        System.out.println("Checking squad channel " + state.getSquadNumber());
 
         for (int i = 0; i < Constants.SQUAD_SIZE; i++) {
             final int squadMemberId = Utils.untrimRobotId(rc.readSharedArray(squadAnnouncementsChannelStart + i));

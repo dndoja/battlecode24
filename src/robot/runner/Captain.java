@@ -98,17 +98,17 @@ public final class Captain {
             }
         }
 
-        final boolean isTargetSectorDiscovered = state.targetSectorNumber == -1 || state.mapSectors
-                .getSectorCenter(state.targetSectorNumber)
+        final boolean isTargetSectorDiscovered = state.getTargetSectorNumber() == -1 || state.getMapSectors()
+                .getSectorCenter(state.getTargetSectorNumber())
                 .isWithinDistanceSquared(currentLocation, 2);
 
         if (gamePhase == GamePhase.SETUP && isTargetSectorDiscovered) {
-            if (state.targetSectorNumber != -1) {
-                SectorDiscovery.markSectorAsDiscovered(rc, state.targetSectorNumber);
+            if (state.getTargetSectorNumber() != -1) {
+                SectorDiscovery.markSectorAsDiscovered(rc, state.getTargetSectorNumber());
                 final boolean[] discoveryMap = SectorDiscovery.getSectorDiscoveryMap(rc);
 
-                final ArrayList<Integer> adjacentSectors = state.mapSectors
-                        .getAdjacentSectors(state.targetSectorNumber);
+                final ArrayList<Integer> adjacentSectors = state.getMapSectors()
+                        .getAdjacentSectors(state.getTargetSectorNumber());
                 for (Integer sector : adjacentSectors) {
                     if (!discoveryMap[sector]) {
                         interestingSectors.push(sector);
@@ -127,8 +127,8 @@ public final class Captain {
 
         if (gamePhase == GamePhase.START_ATTACK) {
             final MapLocation[] enemyFlagLocs = rc.senseBroadcastFlagLocations();
-            final MapLocation targetEnemyFlagLoc = enemyFlagLocs[state.initialSpawnZone];
-            final int targetEnemyFlagSector = state.mapSectors.getSectorNumber(targetEnemyFlagLoc);
+            final MapLocation targetEnemyFlagLoc = enemyFlagLocs[state.getInitialSpawnZone()];
+            final int targetEnemyFlagSector = state.getMapSectors().getSectorNumber(targetEnemyFlagLoc);
             updateTargetSector(targetEnemyFlagSector, rc, state, mover);
         }
 
@@ -138,12 +138,12 @@ public final class Captain {
     private static void updateTargetSector(int nextSectorNumber, RobotController rc, RobotState state, BruteMover mover)
             throws GameActionException {
 
-        final MapLocation nextSectorCenter = state.mapSectors.getSectorCenter(nextSectorNumber);
+        final MapLocation nextSectorCenter = state.getMapSectors().getSectorCenter(nextSectorNumber);
         rc.setIndicatorLine(rc.getLocation(), nextSectorCenter, 0, 100, 159);
 
-        SquadComms.writeChannel1(rc, state.squadNumber, new SquadChannel1(SquadOrder.MOVE, nextSectorCenter));
-        SquadComms.writeChannel2(rc, state.squadNumber,
-                new SquadChannel2(state.currentSectorNumber, nextSectorNumber));
+        SquadComms.writeChannel1(rc, state.getSquadNumber(), new SquadChannel1(SquadOrder.MOVE, nextSectorCenter));
+        SquadComms.writeChannel2(rc, state.getSquadNumber(),
+                new SquadChannel2(state.getCurrentSectorNumber(), nextSectorNumber));
 
         state.setTargetSectorNumber(nextSectorNumber);
         mover.setTarget(nextSectorCenter, 1);

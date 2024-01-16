@@ -9,23 +9,23 @@ import robot.utils.Sectors;
 public class RobotState {
     boolean initialized = false;
 
-    public int id;
-    public Team team;
-    public MapSymmetry mapSymmetry;
-    public Sectors mapSectors;
-    public int mapHeight;
-    public int mapWidth;
-    public SpawnZones spawnZones;
+    int id;
+    Team team;
+    MapSymmetry mapSymmetry;
+    Sectors mapSectors;
+    int mapHeight;
+    int mapWidth;
+    SpawnZones spawnZones;
 
-    public int initialSpawnZone;
-    public RobotRole role;
-    public HashMap<Integer, RobotRole> squad;
-    public int squadNumber;
-    public int turnsSinceSquadFormation = -1;
+    int initialSpawnZone;
+    RobotRole role;
+    HashMap<Integer, RobotRole> squad;
+    int squadNumber;
+    int turnsSinceSquadFormation = -1;
     
-    public int targetSectorNumber = -1;
-    public int currentSectorNumber = -1;
-    public int prevSectorNumber = -1;
+    int targetSectorNumber = -1;
+    int currentSectorNumber = -1;
+    int prevSectorNumber = -1;
 
     public RobotState(){
         team = null;
