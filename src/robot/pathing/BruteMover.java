@@ -74,8 +74,12 @@ public class BruteMover {
         return target != null;
     }
 
-    public void move() throws GameActionException {
-        if (target == null) {
+    public MapLocation getTarget() {
+        return target;
+    }
+    
+    public void move(boolean loosely) throws GameActionException {
+        if (target == null || !rc.isMovementReady()) {
             return;
         }
         
@@ -83,7 +87,7 @@ public class BruteMover {
 
         final MapLocation from = rc.getLocation();
         final ArrayList<Path> sortedPaths = new ArrayList<>();
-        
+        final int currentDist = from.distanceSquaredTo(target);
         for (Direction direction : Constants.DIRECTIONS) {
             final MapLocation newLocation = from.add(direction);
             if (!Utils.isLocationOnMap(newLocation) || visited.contains(newLocation.hashCode())) {
@@ -100,6 +104,10 @@ public class BruteMover {
             if (mapInfo.isWater()){
                 newDist += 1;
             }
+
+            // if (!loosely && newDist >= currentDist) {
+            //     continue;
+            // }
 
             final Path newPath = new Path(direction, newDist, newLocation, mapInfo);
             

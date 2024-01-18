@@ -10,6 +10,7 @@ import robot.comms.squad.SquadComms;
 import robot.pathing.BruteMover;
 import robot.state.Formations;
 import robot.state.RobotState;
+import robot.state.SquadOrder;
 import robot.utils.Offset;
 
 public final class Grunt {
@@ -28,8 +29,11 @@ public final class Grunt {
             final Offset positionInFormation = Formations.getFormationFromDirection(targetDirection)[state.getRank()];
             final MapLocation targetLocation = captainLoc.translate(positionInFormation.dx, positionInFormation.dy);
             mover.setTarget(targetLocation, 1);
-        }
 
-        mover.move();
+            if (channel1Data.activeOrder == SquadOrder.ATTACK && rc.canAttack(targetLocation)){
+                rc.attack(targetLocation);
+            }
+        }
+        mover.move(false);
     }
 }

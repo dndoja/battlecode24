@@ -6,15 +6,18 @@ import java.util.Stack;
 
 import battlecode.common.*;
 import robot.Constants;
+import robot.Logger;
 import robot.comms.SectorDiscovery;
 import robot.comms.squad.SquadChannel1;
 import robot.comms.squad.SquadChannel2;
 import robot.comms.squad.SquadComms;
 import robot.pathing.BruteMover;
+import robot.state.Formations;
 import robot.state.RobotState;
 import robot.state.SpawnZones;
 import robot.state.SquadOrder;
 import robot.utils.BoundingBox;
+import robot.utils.Offset;
 import robot.utils.Sectors;
 
 class ExplorationDirection {
@@ -111,8 +114,45 @@ public final class Captain {
             }
         }
 
+        if (mover.getTarget() != null){ 
+            Offset[] formation = Formations.getFormationFromDirection(currentLocation.directionTo(mover.getTarget()));
+        }
+        boolean shouldWaitForFormation = false;
+
+        // for (Offset offset : formation){
+        //     final MapLocation location = currentLocation.translate(offset.dx, offset.dy);
+        //     final RobotInfo robotInfo = rc.senseRobotAtLocation(location);
+        //     final MapInfo mapInfo = rc.senseMapInfo(location);
+
+        //     if (mapInfo.isWall()) {
+        //         break;
+        //     }
+
+        //     if (robotInfo != null && state.getSquad().containsKey(robotInfo.getID())){
+        //         continue;
+        //     }
+
+        //     shouldWaitForFormation = false;
+        // }
+
         if (gamePhase == GamePhase.PREP_ATTACK) {
             /// TODO: Move close to dam
+        }
+        final RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+
+        MapLocation enemyLocation = null;
+        int foundSquadMembers = 0;
+
+        for (RobotInfo robotInfo : nearbyRobots) {
+            if (robotInfo.getTeam() != rc.getTeam()){ 
+                enemyLocation = robotInfo.getLocation();
+            }else if (state.getSquad().containsKey(robotInfo.getID())){
+                foundSquadMembers++;
+            }
+        }
+
+        if (enemyLocation != null){
+            rc.setIndicatorDot(enemyLocation, 100, 100, 0);
         }
 
         if (gamePhase == GamePhase.START_ATTACK) {
@@ -122,7 +162,18 @@ public final class Captain {
             updateTargetSector(targetEnemyFlagSector, rc, state, mover);
         }
 
-        mover.move();
+        if (gamePhase == GamePhase.LATE) {
+            if (enemyLocation != null){
+                mover.setTarget(currentLocation, 2);
+                SquadComms.writeChannel1(rc, state.getSquadNumber(), new SquadChannel1(SquadOrder.ATTACK, enemyLocation));
+            }else{
+                updateTargetSector(state.getTargetSectorNumber(), rc, state, mover);
+            }
+        }
+
+        // if (foundSquadMembers == Constants.SQUAD_SIZE - 1){
+            mover.move(true);
+        // }
     }
 
     private static void updateTargetSector(int nextSectorNumber, RobotController rc, RobotState state, BruteMover mover)
@@ -132,10 +183,13 @@ public final class Captain {
         rc.setIndicatorLine(rc.getLocation(), nextSectorCenter, 0, 100, 159);
 
         SquadComms.writeChannel1(rc, state.getSquadNumber(), new SquadChannel1(SquadOrder.MOVE, nextSectorCenter));
-        SquadComms.writeChannel2(rc, state.getSquadNumber(),
-                new SquadChannel2(state.getCurrentSectorNumber(), nextSectorNumber));
+        
+        if (nextSectorNumber != state.getTargetSectorNumber()) {
+            SquadComms.writeChannel2(rc, state.getSquadNumber(),
+                    new SquadChannel2(state.getCurrentSectorNumber(), nextSectorNumber));
+            state.setTargetSectorNumber(nextSectorNumber);
+        }
 
-        state.setTargetSectorNumber(nextSectorNumber);
         mover.setTarget(nextSectorCenter, 1);
     }
 
