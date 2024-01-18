@@ -51,36 +51,24 @@ public class SquadComms {
         rc.writeSharedArray(channelNumber, encoded);
     }
 
-    public static void writeRolesChannel(RobotController rc, int relativeLocation, int squadNumber, RobotRole role)
+    public static void writeSpawnsChannel(RobotController rc, int relativeLocation, int squadNumber)
             throws GameActionException {
-        // Skip center location
-        if (relativeLocation > 4) {
-            relativeLocation--;
-        }
-
         final int channel = getSquadChannelStart(squadNumber) + 2;
         final int currentValue = rc.readSharedArray(channel);
-        final int newValue = currentValue | (role.ordinal()+1 << (relativeLocation * 2));
+        final int newValue = currentValue | (1 << relativeLocation);
         rc.writeSharedArray(channel, newValue);
     }
 
-    public static RobotRole[] readRolesChannel(RobotController rc, int squadNumber) throws GameActionException {
+    public static boolean[] readSpawnsChannel(RobotController rc, int squadNumber) throws GameActionException {
         final int channel = getSquadChannelStart(squadNumber) + 2;
         final int value = rc.readSharedArray(channel);
-        final RobotRole[] roles = new RobotRole[9];
+        final boolean[] spawnMap = new boolean[9];
 
-        for (int i = 0; i < 8; i++) {
-            final int roleOrdinal = (value >> (i * 2)) & 0x3;
-            final int index = i >= 4 ? i + 1 : i;
-            if (roleOrdinal == 0){
-                roles[index] = null;
-            }else{
-                roles[index] = Constants.ROBOT_ROLES[roleOrdinal-1];
-            }
+        for (int i = 0; i < 9; i++) {
+            final int spawnMapValue = (value >> i) & 0x1;
+            spawnMap[i] = spawnMapValue == 1;
         }
 
-        roles[4] = null;
-
-        return roles;
+        return spawnMap;
     }
 }

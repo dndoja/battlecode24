@@ -62,9 +62,6 @@ public class BoundingBox {
 
     public int getRelativePosition(MapLocation location) {
         final MapLocation relativeLocation = new MapLocation(location.x - west, location.y - south);
-        Logger.log("Absolute location " + location + " relative location " + relativeLocation + " relative position"
-                + sectors.getSectorNumber(relativeLocation) + " width: " + sectors.width + " height: "
-                + sectors.height);
         return sectors.getSectorNumber(relativeLocation);
     }
 
@@ -72,6 +69,28 @@ public class BoundingBox {
         final MapLocation relativeLocation = sectors.getSectorCenter(sectorNumber);
 
         return new MapLocation(relativeLocation.x + west, relativeLocation.y + south);
+    }
+
+    public Direction getPointOrientation(MapLocation point){
+        final int equator = (north + south) / 2;
+        final int primeMeridian = (east + west) / 2;
+
+        final int dy = point.y - equator;
+        final int dx = point.x - primeMeridian;
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+            if (dx > 0) {
+                return Direction.EAST;
+            } else {
+                return Direction.WEST;
+            }
+        } else {
+            if (dy > 0) {
+                return Direction.NORTH;
+            } else {
+                return Direction.SOUTH;
+            }
+        }
     }
 
     public Direction getDirectionTo(BoundingBox other) {
