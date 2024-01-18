@@ -1,13 +1,13 @@
 package robot;
 
 import battlecode.common.*;
-import robot.comms.squad.SquadFormation;
+import robot.comms.squad.SquadComms;
 import robot.pathing.BruteMover;
 import robot.runner.Captain;
+import robot.runner.Grunt;
+import robot.state.RobotRole;
 import robot.state.RobotState;
-import robot.utils.Utils;
-
-import java.util.ArrayList;
+import robot.utils.BoundingBox;
 import java.util.Random;
 
 public strictfp class RobotPlayer {
@@ -23,88 +23,34 @@ public strictfp class RobotPlayer {
 
     public static void run(RobotController rc) throws GameActionException {
         final BruteMover mover = new BruteMover(rc);
-        // Navigator navigator = null;
-        // Cartographer cartographer = null;
-        
+
         state.initialize(rc);
 
         while (true) {
             turnCount += 1;
             try {
+                rc.setIndicatorString(state.getSquadNumber() + " " + state.getRole());
+
                 if (!rc.isSpawned()) {
                     spawn(rc);
                 } else {
-                    if (state.getSquad().size() < Constants.SQUAD_SIZE-1) {
+                    if (state.getSquad().size() < Constants.SQUAD_SIZE - 1 && 
+                        state.getSquadNumber() >= 0) {
                         discoverSquadMembers(rc);
                     }
 
-                    if (state.getSquad().size() == Constants.SQUAD_SIZE-1) {
+                    if (state.getSquadNumber() >= 0 && state.getSquad().size() == Constants.SQUAD_SIZE - 1) {
                         state.incrementTurnsSinceSquadFormation();
-                    }
-
-                    // rc.setIndicatorString(state.getRole().toString());
-                    
-                    switch (state.getRole()){
-                        case CAPTAIN:
+                        
+                        if (state.getRole() == RobotRole.CAPTAIN) {
                             Captain.doTurn(rc, state, turnCount, mover);
-                            break;
-                        default:
-                            break;
+                        } else {
+                            Grunt.doTurn(rc, state, turnCount, mover);
+                        }
                     }
-                    
-                    // final int sharedId = rc.readSharedArray(0);
-                    // final int id = rc.getID();
-                    // if (sharedId == 0){
-                    // rc.writeSharedArray(0, id);
-                    // }else if (sharedId == id){
-                    // shouldPrint = true;
-                    // }
-                    // if (cartographer == null) {
-                    //     cartographer = new Cartographer(rc.getMapWidth(), rc.getMapHeight());
-                    // }
-
-                    // if (!mover.hasTarget()) {
-                    //     switch (1) {
-                    //         case 0:
-                    //             mover.setTarget(new MapLocation(0, 0), 1);
-                    //             break;
-                    //         case 1:
-                    //             mover.setTarget(new MapLocation(rc.getMapWidth() - 1, 0), 1);
-                    //             break;
-                    //         case 2:
-                    //             mover.setTarget(new MapLocation(0, rc.getMapHeight() - 1), 1);
-                    //             break;
-                    //         case 3:
-                    //             mover.setTarget(new MapLocation(rc.getMapWidth() - 1, rc.getMapHeight() - 1), 1);
-                    //             break;
-                    //     }
-                    // }
-
-                    // final MapInfo[] mapInfos = rc.senseNearbyMapInfos();
-                    // for (MapInfo mapInfo : mapInfos) {
-                    //     final MapLocation location = mapInfo.getMapLocation();
-
-                    //     LocationFeature feature = LocationFeature.EMPTY;
-                    //     if (mapInfo.isWall()) {
-                    //         feature = LocationFeature.WALL;
-                    //     } else if (mapInfo.isWater()) {
-                    //         feature = LocationFeature.WATER;
-                    //     } else if (!mapInfo.isPassable()) {
-                    //         feature = LocationFeature.WATER;
-                    //     } else if (mapInfo.getCrumbs() > 0) {
-                    //         feature = LocationFeature.CRUMBS;
-                    //         mover.setTarget(location, 2);
-                    //     }
-
-                    //     cartographer.addLocationFeature(new Location(location.x, location.y, feature.ordinal()));
-                    // }
-
-                    // mover.move();
-
-                    // cartographer.djikstraMapOfType(PathingMapType.EXPLORATION, loc, turnCount);
                 }
             } catch (GameActionException e) {
-                // System.out.println("GameActionException");
+                System.out.println("GameActionException");
                 e.printStackTrace();
             } catch (Exception e) {
                 System.out.println("Exception");
@@ -125,47 +71,49 @@ public strictfp class RobotPlayer {
                 continue;
             }
 
+            final int spawnZoneNumber = spawnZones[i];
+            final BoundingBox spawnZone = state.getSpawnZones().getZoneBoundingBoxes()[spawnZoneNumber];
+            
+            if (spawnZone.getCenter().equals(spawnLoc)) {
+                continue;
+            }
+
+            final int spawnZoneUnitCountChannel = SquadComms.getSpawnZoneUnitCountChannel(spawnZoneNumber);
+            int unitsCount = rc.readSharedArray(spawnZoneUnitCountChannel);
+
+            int squadNumber = (unitsCount / Constants.SQUAD_SIZE) + (spawnZoneNumber * Constants.SQUADS_PER_SPAWN_ZONE);
+            int rank = unitsCount % Constants.SQUAD_SIZE;
+
+            if (unitsCount == (Constants.SQUAD_SIZE * Constants.SQUADS_COUNT) / Constants.SPAWN_ZONES_COUNT) {
+                continue;
+            }
+
             rc.spawn(spawnLoc);
 
-            if (state.getTurnsSinceSquadFormation() == -1){
-                final int spawnZoneNumber = spawnZones[i];
-                final int spawnZoneSquadCountChannel = SquadFormation.getSpawnZoneSquadCountChannel(spawnZoneNumber);
-                
-                int squadsCount = rc.readSharedArray(spawnZoneSquadCountChannel);
-                int squadNumber = spawnZoneNumber + (3 * squadsCount);
-                int squadHeadcountChannel = SquadFormation.getSquadHeadcountChannel(squadNumber);
-                int headcount = rc.readSharedArray(squadHeadcountChannel);
-                
-                if (headcount >= 8){
-                    headcount = 0;
-                    squadsCount += 1;
-                    squadNumber = spawnZoneNumber + (3 * squadsCount);
-                    rc.writeSharedArray(spawnZoneSquadCountChannel, squadsCount);
-                }
-                
-                state.setInitialSpawnZone(spawnZoneNumber);
-
-                System.out.println(squadNumber);
-                state.setSquadNumber(squadNumber);
-                state.setRoleFromSpawnOrder(headcount);
-
-                rc.writeSharedArray(squadHeadcountChannel, headcount+1);
-                rc.writeSharedArray(SquadFormation.getAnnouncementChannel(squadNumber, headcount), Utils.trimRobotId(state.getId()));
-            }
+            state.setInitialSpawnZone(spawnZoneNumber);
+            state.setSquadRank(squadNumber, rank);
+            rc.writeSharedArray(spawnZoneUnitCountChannel, unitsCount + 1);
+            SquadComms.writeRolesChannel(rc, spawnZone.getRelativePosition(spawnLoc), squadNumber, state.getRole());
 
             break;
         }
     }
 
     private static void discoverSquadMembers(RobotController rc) throws GameActionException {
-        final int squadAnnouncementsChannelStart = SquadFormation.getSquadHeadcountChannel(state.getSquadNumber()) + 1;
-        System.out.println("Checking squad channel " + state.getSquadNumber());
+        final RobotRole[] rolesByRelativeLoc = SquadComms.readRolesChannel(rc, state.getSquadNumber());
 
-        for (int i = 0; i < Constants.SQUAD_SIZE; i++) {
-            final int squadMemberId = Utils.untrimRobotId(rc.readSharedArray(squadAnnouncementsChannelStart + i));
+        for (int i = 0; i < rolesByRelativeLoc.length; i++){
+            final RobotRole role = rolesByRelativeLoc[i];
+            if (role == null){
+                continue;
+            }
 
-            if (squadMemberId != state.getId() && squadMemberId != 10000){
-                state.addSquadMember(squadMemberId, Constants.SQUAD_COMPOSITION[i]);
+            final BoundingBox spawnZone = state.getSpawnZones().getZoneBoundingBoxes()[state.getInitialSpawnZone()];
+            final MapLocation location = spawnZone.getLocationFromRelativePosition(i);
+            final RobotInfo squadMember = rc.senseRobotAtLocation(location);
+
+            if (squadMember != null && squadMember.getID() != state.getId()) {
+                state.addSquadMember(squadMember.getID(), role);
             }
         }
     }

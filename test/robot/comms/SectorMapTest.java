@@ -20,6 +20,11 @@ public class SectorMapTest {
 
         final Sectors smol = new Sectors(31,31);
         assert smol.getSectorNumber(11, 26) == 13;
+
+        final Sectors tiny = new Sectors(3, 3, 1);
+        assert tiny.getSectorNumber(1, 1) == 4;
+        assert tiny.getSectorNumber(0,0) == 0;
+        assert tiny.getSectorNumber(0,2) == 6;
     }
     
     @Test
@@ -38,6 +43,10 @@ public class SectorMapTest {
         final Sectors smol = new Sectors(31,31);
         assert smol.getSectorCenter(0).equals(new MapLocation(3,3));
         assert smol.getSectorCenter(1).equals(new MapLocation(10,3));
+
+        final Sectors tiny = new Sectors(3, 3, 1);
+        assert tiny.getSectorCenter(4).equals(new MapLocation(1,1));
+        assert tiny.getSectorCenter(0).equals(new MapLocation(0,0));
     }
 
     @Test

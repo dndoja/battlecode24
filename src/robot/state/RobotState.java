@@ -4,6 +4,7 @@ import java.util.HashMap;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.Team;
+import robot.Constants;
 import robot.utils.Sectors;
 
 public class RobotState {
@@ -20,6 +21,8 @@ public class RobotState {
     int initialSpawnZone;
     RobotRole role;
     HashMap<Integer, RobotRole> squad;
+    int captainId;
+    int rank;
     int squadNumber;
     int turnsSinceSquadFormation = -1;
     
@@ -56,16 +59,10 @@ public class RobotState {
         return role;
     }
     
-    public void setRoleFromSpawnOrder(int spawnOrder){
-        if (spawnOrder == 0){
-            role = RobotRole.CAPTAIN;
-        }else if (spawnOrder <= 3){
-            role = RobotRole.MEDIC;
-        }else if (spawnOrder <= 6){
-            role = RobotRole.SOLDIER;
-        }else{
-            role = RobotRole.BUILDER;
-        }
+    public void setSquadRank(int squadNumber, int rank){
+        this.squadNumber = squadNumber;
+        this.rank = rank;
+        this.role = Constants.SQUAD_COMPOSITION[rank];
     }
 
     public Team getTeam(){
@@ -80,12 +77,15 @@ public class RobotState {
         return squadNumber;
     }
 
-    public void setSquadNumber(int squadNumber){
-        this.squadNumber = squadNumber;
+    public int getRank(){
+        return rank;
     }
 
     public void addSquadMember(int id, RobotRole role){
         squad.put(id, role);
+        if (role == RobotRole.CAPTAIN){
+            captainId = id;
+        }
     }
 
     public HashMap<Integer, RobotRole> getSquad(){
@@ -151,5 +151,9 @@ public class RobotState {
 
     public int getMapHeight(){
         return mapHeight;
+    }
+
+    public int getCaptainId(){
+        return captainId;
     }
 }

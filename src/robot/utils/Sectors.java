@@ -11,12 +11,22 @@ public class Sectors {
     int height;
     int horizontalSectorCount;
     int verticalSectorCount;
+    int sectorSize;
 
     public Sectors(int width, int height) {
         this.width = width;
         this.height = height;
-        this.horizontalSectorCount = width / Constants.SECTOR_SIZE;
-        this.verticalSectorCount = height / Constants.SECTOR_SIZE;
+        this.sectorSize = Constants.SECTOR_SIZE;
+        this.horizontalSectorCount = width / sectorSize;
+        this.verticalSectorCount = height / sectorSize;
+    }
+
+    public Sectors(int width, int height, int sectorSize) {
+        this.width = width;
+        this.height = height;
+        this.sectorSize = sectorSize;
+        this.horizontalSectorCount = width / sectorSize;
+        this.verticalSectorCount = height / sectorSize;
     }
 
     public int getSectorNumber(MapLocation location) {
@@ -24,8 +34,8 @@ public class Sectors {
     }
 
     public int getSectorNumber(int x, int y) {
-        final int maxSectorX = horizontalSectorCount * Constants.SECTOR_SIZE-1;
-        final int maxSectorY = verticalSectorCount * Constants.SECTOR_SIZE-1;
+        final int maxSectorX = horizontalSectorCount * sectorSize-1;
+        final int maxSectorY = verticalSectorCount * sectorSize-1;
 
         if (x > maxSectorX){
             x = maxSectorX;
@@ -35,8 +45,8 @@ public class Sectors {
             y = maxSectorY;
         }
 
-        final int sectorX = x / Constants.SECTOR_SIZE;
-        final int sectorY = y / Constants.SECTOR_SIZE;
+        final int sectorX = x / sectorSize;
+        final int sectorY = y / sectorSize;
 
         return sectorY * horizontalSectorCount + sectorX;
     } 
@@ -45,19 +55,19 @@ public class Sectors {
         final int sectorY = sectorNumber / horizontalSectorCount;
         final int sectorX = sectorNumber % horizontalSectorCount;
         
-        int sectorWidth = Constants.SECTOR_SIZE;
-        int sectorHeight = Constants.SECTOR_SIZE;
+        int sectorWidth = sectorSize;
+        int sectorHeight = sectorSize;
 
         if (sectorX == horizontalSectorCount - 1) {
-            sectorWidth = width - (horizontalSectorCount - 1) * Constants.SECTOR_SIZE;
+            sectorWidth = width - (horizontalSectorCount - 1) * sectorSize;
         }
 
         if (sectorY == verticalSectorCount - 1) {
-            sectorHeight = height - (verticalSectorCount - 1) * Constants.SECTOR_SIZE;
+            sectorHeight = height - (verticalSectorCount - 1) * sectorSize;
         }
 
-        final int centerX = sectorX * Constants.SECTOR_SIZE + sectorWidth / 2;
-        final int centerY = sectorY * Constants.SECTOR_SIZE + sectorHeight / 2;
+        final int centerX = sectorX * sectorSize + sectorWidth / 2;
+        final int centerY = sectorY * sectorSize + sectorHeight / 2;
 
         return new MapLocation(centerX, centerY);
     }
@@ -67,7 +77,7 @@ public class Sectors {
         final int sectorX = sectorCenter.x;
         final int sectorY = sectorCenter.y;
 
-        final int distance = Constants.SECTOR_SIZE;
+        final int distance = sectorSize;
 
         final int newSectorX = sectorX + direction.dx * distance;
         final int newSectorY = sectorY + direction.dy * distance;

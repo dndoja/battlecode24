@@ -7,7 +7,7 @@ public class Channels {
     private static final int TOTAL_SQUADS = GameConstants.ROBOT_CAPACITY / Constants.SQUAD_SIZE;
     private static final int CHANNELS_END = 64;
 
-    public static final int CHANNELS_PER_SQUAD = 2;
+    public static final int CHANNELS_PER_SQUAD = 3;
 
     // End of the band is exclusive
     public static final int BAND_SQUAD_END = TOTAL_SQUADS * CHANNELS_PER_SQUAD;

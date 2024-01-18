@@ -6,24 +6,27 @@ import java.util.List;
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;
 import robot.Constants;
+import robot.Logger;
 
 public class BoundingBox {
     public final int north;
     public final int east;
     public final int south;
     public final int west;
+    public final Sectors sectors;
 
     public BoundingBox(int north, int east, int south, int west) {
         this.north = north;
         this.east = east;
         this.south = south;
         this.west = west;
+        this.sectors = new Sectors(east - west + 1, north - south + 1, 1);
     }
 
     @Override
     public String toString() {
         return String.format("BoundingBox(north=%d, east=%d, south=%d, west=%d)", north, east, south, west);
-    } 
+    }
 
     public static BoundingBox fromMapLocations(MapLocation[] locations) {
         return fromMapLocations(Arrays.asList(locations));
@@ -51,6 +54,24 @@ public class BoundingBox {
         }
 
         return new BoundingBox(north, east, south, west);
+    }
+
+    public MapLocation getCenter() {
+        return new MapLocation((east + west) / 2, (north + south) / 2);
+    }
+
+    public int getRelativePosition(MapLocation location) {
+        final MapLocation relativeLocation = new MapLocation(location.x - west, location.y - south);
+        Logger.log("Absolute location " + location + " relative location " + relativeLocation + " relative position"
+                + sectors.getSectorNumber(relativeLocation) + " width: " + sectors.width + " height: "
+                + sectors.height);
+        return sectors.getSectorNumber(relativeLocation);
+    }
+
+    public MapLocation getLocationFromRelativePosition(int sectorNumber) {
+        final MapLocation relativeLocation = sectors.getSectorCenter(sectorNumber);
+
+        return new MapLocation(relativeLocation.x + west, relativeLocation.y + south);
     }
 
     public Direction getDirectionTo(BoundingBox other) {

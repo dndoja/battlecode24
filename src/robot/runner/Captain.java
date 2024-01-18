@@ -1,17 +1,8 @@
 package robot.runner;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Stack;
-
-import org.hibernate.mapping.Array;
-
-import com.google.flatbuffers.FlexBuffers.Map;
 
 import battlecode.common.*;
 import robot.Constants;
@@ -20,7 +11,6 @@ import robot.comms.squad.SquadChannel1;
 import robot.comms.squad.SquadChannel2;
 import robot.comms.squad.SquadComms;
 import robot.pathing.BruteMover;
-import robot.state.MapSymmetry;
 import robot.state.RobotState;
 import robot.state.SpawnZones;
 import robot.state.SquadOrder;
@@ -64,8 +54,8 @@ public final class Captain {
 
         state.updateCurrentSectorNumber(currentLocation);
 
-        if (state.getTurnsSinceSquadFormation() == 0) {
-            SquadComms.cleanSquadChannels(rc, state.getSquadNumber());
+        if (state.getTurnsSinceSquadFormation() == 1) {
+            // SquadComms.cleanSquadChannels(rc, state.getSquadNumber());
             final int currentSectorNumber = state.getMapSectors().getSectorNumber(currentLocation);
             final int spawnZoneIndex = state.getInitialSpawnZone();
             final LinkedHashMap<Direction, Integer> validExploringDirections = getValidExploringDirections(
