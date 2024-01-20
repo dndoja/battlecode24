@@ -3,6 +3,8 @@ package robot;
 import battlecode.common.*;
 import robot.comms.squad.SquadComms;
 import robot.pathing.BruteMover;
+import robot.pathing.BugNav;
+import robot.pathing.Cartographer;
 import robot.runner.Captain;
 import robot.runner.Grunt;
 import robot.state.Formations;
@@ -26,9 +28,12 @@ public strictfp class RobotPlayer {
     }
 
     public static void run(RobotController rc) throws GameActionException {
-        final BruteMover mover = new BruteMover(rc);
-
         state.initialize(rc);
+
+        final BruteMover mover = new BruteMover(rc);
+        final BugNav bugNav = new BugNav(rc);
+        final Cartographer cartographer = new Cartographer(state.getMapWidth(), state.getMapHeight());
+
 
         while (true) {
             turnCount += 1;
@@ -47,7 +52,7 @@ public strictfp class RobotPlayer {
                         state.incrementTurnsSinceSquadFormation();
 
                         if (state.getRole() == RobotRole.CAPTAIN) {
-                            Captain.doTurn(rc, state, turnCount, mover);
+                            Captain.doTurn(rc, state, turnCount, bugNav, cartographer);
                         } else {
                             Grunt.doTurn(rc, state, turnCount, mover);
                         }

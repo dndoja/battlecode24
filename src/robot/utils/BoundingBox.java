@@ -6,7 +6,7 @@ import java.util.List;
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;
 import robot.Constants;
-import robot.Logger;
+import robot.Loggy;
 
 public class BoundingBox {
     public final int north;
@@ -21,6 +21,14 @@ public class BoundingBox {
         this.south = south;
         this.west = west;
         this.sectors = new Sectors(east - west + 1, north - south + 1, 1);
+    }
+
+    public BoundingBox(MapLocation center, int width, int height) {
+        this.north = center.y + height / 2;
+        this.east = center.x + width / 2;
+        this.south = center.y - height / 2;
+        this.west = center.x - width / 2;
+        this.sectors = new Sectors(width, height, 1);
     }
 
     @Override
@@ -61,6 +69,10 @@ public class BoundingBox {
     }
 
     public int getRelativePosition(MapLocation location) {
+        if (location.x < west || location.x > east || location.y < south || location.y > north) {
+            return -1;
+        }
+
         final MapLocation relativeLocation = new MapLocation(location.x - west, location.y - south);
         return sectors.getSectorNumber(relativeLocation);
     }

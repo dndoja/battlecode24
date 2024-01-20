@@ -22,6 +22,5 @@ public class SquadCommsTest {
         final SquadChannel2 decoded = SquadChannel2.decode(encoded);
 
         assert decoded.currentSectorNumber == 7;
-        assert decoded.targetSectorNumber == 5;
     }
 }

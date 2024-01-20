@@ -20,10 +20,8 @@ public final class Constants {
     public static final SquadOrder[] ORDERS = SquadOrder.values();
 
     public static boolean PRINT = true;
-    public static final int MAX_MAP_SIZE = 1;
+    public static final int MAX_MAP_SIZE = 60;
     public static final int[][] BASE_INT_MAP = new int[MAX_MAP_SIZE][MAX_MAP_SIZE];
-    public static final boolean[][] BASE_BOOL_MAP = new boolean[MAX_MAP_SIZE][MAX_MAP_SIZE];
-    public static final int[][] BASE_MAX_VAL_INT_MAP = new int[MAX_MAP_SIZE][MAX_MAP_SIZE];
     public static final int SPAWN_ZONES_COUNT = 3;
     public static final RobotRole[] SQUAD_COMPOSITION = {
         RobotRole.CAPTAIN,
@@ -45,12 +43,4 @@ public final class Constants {
     public static final int MAX_SECTOR_NUMBER_1D = 60 / SECTOR_SIZE;
     public static final int SECTOR_DIAGONAL_LENGTH = 10;
     public static final RobotRole[] ROBOT_ROLES = RobotRole.values();
-
-    static {
-        for (int y = 0; y < MAX_MAP_SIZE; y++) {
-            for (int x = 0; x < MAX_MAP_SIZE; x++) {
-                BASE_MAX_VAL_INT_MAP[y][x] = Integer.MAX_VALUE;
-            }
-        }
-    }
 }

@@ -89,6 +89,13 @@ public class Sectors {
         return getSectorNumber(newSectorX, newSectorY);
     }
 
+    public Direction getDirectionToSector(int fromSector, int toSector) {
+        final MapLocation fromSectorCenter = getSectorCenter(fromSector);
+        final MapLocation toSectorCenter = getSectorCenter(toSector);
+
+        return fromSectorCenter.directionTo(toSectorCenter);
+    }
+
     public ArrayList<Integer> getAdjacentSectors(int sectorNumber) {
         final ArrayList<Integer> adjacentSectors = new ArrayList<>();
 

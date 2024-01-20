@@ -2,6 +2,7 @@ package robot.state;
 
 import java.util.ArrayList;
 
+import battlecode.common.MapLocation;
 import robot.Constants;
 import robot.utils.BoundingBox;
 
@@ -37,6 +38,14 @@ public enum MapSymmetry {
             possibleSymmetries.remove(MapSymmetry.HORIZONTAL);
         }
 
+        if (spawBoundingBox.west < primeMeridian && spawBoundingBox.east > primeMeridian) {
+            possibleSymmetries.remove(MapSymmetry.HORIZONTAL);
+        }
+
+        if (spawBoundingBox.north < equator && spawBoundingBox.south > equator) {
+            possibleSymmetries.remove(MapSymmetry.VERTICAL);
+        }
+
         if (spawBoundingBox.east < primeMeridian && spawBoundingBox.east > primeMeridian - minSpawnMirrorDistance) {
             possibleSymmetries.remove(MapSymmetry.HORIZONTAL);
         }
@@ -53,6 +62,19 @@ public enum MapSymmetry {
             return possibleSymmetries.get(0);
         } else {
             return MapSymmetry.UNKNOWN;
+        }
+    }
+
+    public MapLocation mirror(MapLocation location, int mapWidth, int mapHeight) {
+        switch (this) {
+            case VERTICAL:
+                return new MapLocation(mapWidth - location.x, location.y);
+            case HORIZONTAL:
+                return new MapLocation(location.x, mapHeight - location.y);
+            case ROTATIONAL:
+                return new MapLocation(mapWidth - location.x, mapHeight - location.y);
+            default:
+                return location;
         }
     }
 }
