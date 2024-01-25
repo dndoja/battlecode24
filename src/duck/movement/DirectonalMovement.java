@@ -1,16 +1,17 @@
-package duck.pathing;
+package duck.movement;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
-public class MomentumPather {
+public class DirectonalMovement {
     final RobotController rc;
-    Direction mainDirection;
     final MapLocation pointOfOrientation;
+    boolean bounce = false;
+    Direction mainDirection;
 
-    public MomentumPather(RobotController rc, MapLocation pointOfOrientation) {
+    public DirectonalMovement(RobotController rc, MapLocation pointOfOrientation) {
         this.rc = rc;
         this.pointOfOrientation = pointOfOrientation;
     }
@@ -19,34 +20,44 @@ public class MomentumPather {
         mainDirection = direction;
     }
 
-    public void move() throws GameActionException {
-        rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(mainDirection), 255, 0, 0);
+    public void setShouldBounce(boolean bounce) {
+        this.bounce = bounce;
+    }
+
+    public void move(MapLocation currentLocation) throws GameActionException {
+        rc.setIndicatorLine(currentLocation, currentLocation.add(mainDirection), 255, 0, 0);
         if (rc.canMove(mainDirection)) {
             rc.move(mainDirection);
             return;
         }
 
-        Direction orientation = rc.getLocation().directionTo(pointOfOrientation);
+        Direction orientation = currentLocation.directionTo(pointOfOrientation);
         Direction[] directions = bounce(mainDirection, orientation);
 
-        while (true){
+        for (int i = 8; --i > 0;) {
             Direction first = directions[0];
             Direction second = directions[1];
 
-            rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(directions[0]), 0, 150, 100);
-            rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(directions[1]), 0, 150, 100);
+            rc.setIndicatorLine(currentLocation, currentLocation.add(directions[0]), 0, 150, 100);
+            rc.setIndicatorLine(currentLocation, currentLocation.add(directions[1]), 0, 150, 100);
 
             if (rc.canMove(first)) {
-                mainDirection = first;
+                if (bounce) {
+                    mainDirection = first;
+                }
+
                 rc.move(first);
                 return;
             } else if (rc.canMove(second)) {
-                mainDirection = second;
+                if (bounce) {
+                    mainDirection = second;
+                }
+
                 rc.move(second);
                 return;
             }
 
-            directions = bounce(directions[0], orientation);
+            directions = bounce ? bounce(directions[0], orientation) : hug(directions[0], orientation);
         }
     }
 
@@ -79,6 +90,16 @@ public class MomentumPather {
             left = Direction.SOUTHEAST;
             right = Direction.NORTHWEST;
         }
+
+        final int distLeft = left.dx - fallbackDirection.dx + left.dy - fallbackDirection.dy;
+        final int distRight = right.dx - fallbackDirection.dx + right.dy - fallbackDirection.dy;
+
+        return distLeft < distRight ? new Direction[] { left, right } : new Direction[] { right, left };
+    }
+
+    private Direction[] hug(Direction direction, Direction fallbackDirection) {
+        final Direction left = direction.rotateLeft();
+        final Direction right = direction.rotateRight();
 
         final int distLeft = left.dx - fallbackDirection.dx + left.dy - fallbackDirection.dy;
         final int distRight = right.dx - fallbackDirection.dx + right.dy - fallbackDirection.dy;

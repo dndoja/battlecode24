@@ -10,7 +10,7 @@ public class BytecodeCounter {
         bytecodesUsed = Clock.getBytecodeNum();
     }
     
-    public static void checkpoint(String scope){
+    public static void stop(String scope){
         final int current = Clock.getBytecodeNum();
         if (Constants.PRINT) {
             System.out.println(scope + ": " + (current - bytecodesUsed));

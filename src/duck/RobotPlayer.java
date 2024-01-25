@@ -1,7 +1,8 @@
 package duck;
 
 import battlecode.common.*;
-import duck.pathing.*;
+import duck.movement.*;
+import duck.utils.stack.StackMapLocation;
 import robot.utils.BytecodeCounter;
 
 import java.util.Random;
@@ -18,9 +19,12 @@ public strictfp class RobotPlayer {
     public static void run(RobotController rc) throws GameActionException {
         // final Cartographer cartographer = new Cartographer(rc.getMapWidth(),
         // rc.getMapHeight());
-        final MomentumPather bounceMover = new MomentumPather(rc,
-                new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2));
-        bounceMover.setMainDirection(Constants.DIRECTIONS[rng.nextInt(8)]);
+        final MapLocation mapCenter = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
+        final PathedMovement pathedMover = new PathedMovement(rc);
+        final DirectonalMovement directionalMover = new DirectonalMovement(rc, mapCenter);
+        directionalMover.setShouldBounce(true);
+        directionalMover.setMainDirection(Constants.DIRECTIONS[rng.nextInt(8)]);
+
         MapLocation flagTarget = null;
 
         while (true) {
@@ -29,18 +33,34 @@ public strictfp class RobotPlayer {
                 if (!rc.isSpawned()) {
                     spawn(rc);
                 } else {
+                    final MapLocation currentLocation = rc.getLocation();
+                    final StackMapLocation impassableLocations = new StackMapLocation(48);
+                    final MapInfo[] mapInfos = rc.senseNearbyMapInfos(49);
+
+                    for (int i = mapInfos.length; --i >= 0;) {
+                        MapInfo mapInfo = mapInfos[i];
+                        if (!mapInfo.isPassable()){
+                            impassableLocations.push(mapInfo.getMapLocation());
+                        }
+                    }
+
                     if (isPrepGamePhase()) {
                         if (rc.isMovementReady()) {
-                            bounceMover.move();
+                            directionalMover.move(currentLocation);
                         }
                     } else if (turnCount == 200) {
                         flagTarget = rc.senseBroadcastFlagLocations()[rc.getID() % 3];
-                    } else {
-                        BytecodeCounter.start();
-                        final long[] pathingDistances = Pathfinder.getReachabilityMasks(new MapLocation(7, 3));
-                        final Direction[] directions = Pathfinder.getNextDirectionsToTarget(pathingDistances,
-                                new MapLocation(3, 3));
-                        BytecodeCounter.stop("getDistancesTo");
+                        directionalMover.setShouldBounce(false);
+                        directionalMover.setMainDirection(currentLocation.directionTo(flagTarget));
+                        pathedMover.pathTowards(currentLocation, flagTarget, impassableLocations);
+                    } else if (rc.isMovementReady()) {
+                        if (pathedMover.hasReachedLocalTarget(currentLocation)) {
+                            pathedMover.pathTowards(currentLocation, flagTarget, impassableLocations);
+                        }
+
+                        if (!pathedMover.move(currentLocation)) {
+                            directionalMover.move(currentLocation);
+                        }
                     }
                 }
             } catch (GameActionException e) {
